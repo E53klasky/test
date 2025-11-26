@@ -185,7 +185,7 @@ bool analyzeVariable(
                 << globalCompressionRatio << "x\n";
             std::cout << "    NRMSE: " << std::scientific << std::setprecision(6)
                 << globalNRMSE << "\n";
-            std::cout << "    L∞ Error: " << std::scientific << std::setprecision(6)
+            std::cout << "    Linf Error: " << std::scientific << std::setprecision(6)
                 << globalMaxError << "\n";
         }
 
@@ -205,7 +205,7 @@ bool analyzeVariable(
             << (totalCompressionRatio / successfulSteps) << "x\n";
         std::cout << "    Avg NRMSE: " << std::scientific << std::setprecision(6)
             << (totalNRMSE / successfulSteps) << "\n";
-        std::cout << "    Max L∞ Error: " << std::scientific << std::setprecision(6)
+        std::cout << "    Max Linf Error: " << std::scientific << std::setprecision(6)
             << totalLinf << "\n";
     }
 

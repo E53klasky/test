@@ -58,7 +58,6 @@ void processVariable(
             continue;
         }
 
-        // Calculate domain decomposition
         std::vector<size_t> start(ndims , 0);
         std::vector<size_t> count = shape;
 
@@ -70,7 +69,6 @@ void processVariable(
         size_t localSize = 1;
         for (auto c : count) localSize *= c;
 
-        // Pre-allocate buffer with LOCAL size
         std::vector<T> data(localSize);
 
         reader.Get(varRead , data.data());
@@ -80,13 +78,12 @@ void processVariable(
             std::cout << "  Each rank read " << localSize << " elements (local chunk)\n";
         }
 
-        // Define variable on first step only
         if (step == 0) {
             auto varWrite = writeIO.DefineVariable<T>(
                 varName ,
-                shape ,      // Global shape
-                start ,      // Local start offset
-                count ,      // Local count
+                shape ,
+                start ,
+                count ,
                 adios2::ConstantDims
             );
 
@@ -191,7 +188,6 @@ int main(int argc , char** argv)
     try {
         adios2::ADIOS adios(MPI_COMM_WORLD);
 
-        // Setup compressor
         adios2::Params opParams;
         if (compressor == "CAESAR")
         {
@@ -227,7 +223,6 @@ int main(int argc , char** argv)
 
         auto op = adios.DefineOperator("Comp" , compressor , opParams);
 
-        // Probe to detect variable types
         adios2::IO probeIO = adios.DeclareIO("ProbeIO");
         adios2::Engine probe = probeIO.Open(inFile , adios2::Mode::Read);
         probe.BeginStep();
@@ -242,10 +237,8 @@ int main(int argc , char** argv)
             return 0;
         }
 
-        // Determine which variables to process
         std::vector<std::string> varsToProcess;
         if (targetVars.empty()) {
-            // Process all variables
             for (const auto& varPair : allVars) {
                 varsToProcess.push_back(varPair.first);
             }
@@ -254,7 +247,6 @@ int main(int argc , char** argv)
             varsToProcess = targetVars;
         }
 
-        // Process each variable
         for (const auto& varName : varsToProcess)
         {
             if (allVars.find(varName) == allVars.end()) {
