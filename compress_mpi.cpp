@@ -192,7 +192,6 @@ int main(int argc , char** argv)
         if (compressor == "CAESAR")
         {
             opParams = {
-                {"nrmse", std::to_string(errorBound)},
                 {"error_bound", std::to_string(errorBound)},
                 {"mode", "CAESAR_V"},
                 {"batch_size", "32"}
@@ -200,17 +199,16 @@ int main(int argc , char** argv)
         }
         else if (compressor == "MGARD")
         {
-            opParams = { {"tolerance", std::to_string(errorBound)} };
+            opParams = { {"accuracy", std::to_string(errorBound)} };
         }
         else if (compressor == "ZFP")
         {
             opParams = { {"accuracy", std::to_string(errorBound)} };
         }
-        else if (compressor == "SZ3")
+        else if (compressor == "SZ")
         {
             opParams = {
-                {"error_bound", std::to_string(errorBound)},
-                {"mode", "ABS"}
+                {"accuracy", std::to_string(errorBound)}
             };
         }
         else
