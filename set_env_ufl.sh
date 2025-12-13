@@ -83,6 +83,8 @@ echo "→ MPICH loaded from $MPICH_DIR"
 which mpicc
 which mpirun
 
+export UCX_TLS=tcp
+export UCX_NET_DEVICES=lo
 
 # --------------------------
 # Step 6: Summary
