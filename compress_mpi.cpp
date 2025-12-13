@@ -6,7 +6,7 @@
 #include <map>
 
 template<typename T>
-void compress_step_var(
+void compress_var(
     adios2::Engine& reader,
     adios2::Engine& writer,
     adios2::IO& readIO,
@@ -18,24 +18,26 @@ void compress_step_var(
     bool isFirstDefinition,
     adios2::Operator& op
 ) {
-    
     auto varRead = readIO.InquireVariable<T>(varName);
-    if (!varRead) return;
-    
+    if (!varRead) {
+        if (rank == 0) std::cerr << "    Cannot inquire variable: " << varName << "\n";
+        return;
+    }
+
     auto shape = varRead.Shape();
     size_t ndims = shape.size();
-        
+
     if (decompDim >= ndims) {
-        if (rank == 0) std::cerr << "Error: Decomp dim too large for " << varName << "\n";
+        if (rank == 0) std::cerr << "    Error: Decomp dim " << decompDim << " too large for " << varName << " (ndims=" << ndims << ")\n";
         return;
     }
 
     std::vector<size_t> start(ndims, 0);
     std::vector<size_t> count = shape;
-    
+
     count[decompDim] /= size;
     start[decompDim] = rank * count[decompDim];
-        
+
     if (rank == size - 1) {
         count[decompDim] = shape[decompDim] - start[decompDim];
     }
@@ -45,18 +47,28 @@ void compress_step_var(
     size_t localSize = 1;
     for (auto c : count) localSize *= c;
     std::vector<T> data(localSize);
-    
+
     reader.Get(varRead, data.data(), adios2::Mode::Sync);
 
+    // Define or inquire variable
     adios2::Variable<T> varWrite;
     if (isFirstDefinition) {
         varWrite = writeIO.DefineVariable<T>(varName, shape, start, count, adios2::ConstantDims);
         varWrite.AddOperation(op);
-        if(rank==0) std::cout << "  [Define] Variable " << varName << " defined with compression.\n";
+        
+        if (rank == 0) {
+            std::cout << "    [Define+Compress] " << varName << " shape=[";
+            for (size_t i = 0; i < shape.size(); ++i) {
+                std::cout << shape[i];
+                if (i < shape.size() - 1) std::cout << ", ";
+            }
+            std::cout << "]\n";
+        }
     } else {
         varWrite = writeIO.InquireVariable<T>(varName);
+        if (rank == 0) std::cout << "    [Write] " << varName << "\n";
     }
-    
+
     if (varWrite) {
         writer.Put(varWrite, data.data());
     }
@@ -95,7 +107,7 @@ int main(int argc, char** argv)
 
         adios2::Params opParams;
         if (compressor == "CAESAR") {
-            opParams = {{"error_bound", std::to_string(errorBound)}, {"mode", "CAESAR_V"}, {"batch_size", "32"}};
+            opParams = {{"error_bound", std::to_string(errorBound)}, {"batch_size", "32"}};
         } else if (compressor == "MGARD" || compressor == "ZFP" || compressor == "SZ") {
             opParams = {{"accuracy", std::to_string(errorBound)}};
         }
@@ -104,44 +116,48 @@ int main(int argc, char** argv)
         adios2::Engine reader = readIO.Open(inFile, adios2::Mode::Read);
         adios2::Engine writer = writeIO.Open(outFile, adios2::Mode::Write);
 
-        std::map<std::string, adios2::Params> availableVars;
-        
+        int step = 0;
+        int totalVarsProcessed = 0;
         std::map<std::string, bool> varDefined;
 
-        int step = 0;
+        // Process each "step" (which may contain different variables)
         while (reader.BeginStep() == adios2::StepStatus::OK) {
-            if (rank == 0) std::cout << "\n=== Processing Step " << step << " ===\n";
+            if (rank == 0) std::cout << "\n=== Step " << step << " ===\n";
             
             auto currentVars = readIO.AvailableVariables();
             
-            std::vector<std::string> stepVars;
-            if (targetVars.empty()) {
-                for(const auto& v : currentVars) stepVars.push_back(v.first);
-            } else {
-                stepVars = targetVars;
+            if (rank == 0) {
+                std::cout << "  Available variables in this step: ";
+                for (const auto& v : currentVars) std::cout << v.first << " ";
+                std::cout << "\n";
             }
 
             writer.BeginStep();
 
-            for (const auto& name : stepVars) {                
-                if (currentVars.find(name) == currentVars.end()) {
-                    if (rank == 0 && step == 0) std::cerr << "Warning: Variable " << name << " not found in step " << step << "\n";
+            // Process ALL variables in this step that match our target list
+            for (const auto& [varName, varInfo] : currentVars) {
+                // If user specified variables, only process those
+                if (!targetVars.empty() && 
+                    std::find(targetVars.begin(), targetVars.end(), varName) == targetVars.end()) {
                     continue;
                 }
 
-                std::string type = currentVars[name]["Type"];
-                bool isFirst = (varDefined.find(name) == varDefined.end());
-                if (isFirst) varDefined[name] = true;
+                std::string type = varInfo.at("Type");
+                bool isFirst = (varDefined.find(varName) == varDefined.end());
+                if (isFirst) varDefined[varName] = true;
 
-                if (type == "double")
-                    compress_step_var<double>(reader, writer, readIO, writeIO, name, decompDim, rank, size, isFirst, op);
-                else if (type == "float")
-                    compress_step_var<float>(reader, writer, readIO, writeIO, name, decompDim, rank, size, isFirst, op);
-                // Will need to add different type handling
-                //else if (type == "int32_t" || type == "int")
-                    //compress_step_var<int>(reader, writer, readIO, writeIO, name, decompDim, rank, size, isFirst, op);
-                else {
-                    if (rank == 0 && step == 0) std::cout << "Skipping unsupported type " << type << " for " << name << "\n";
+                if (type == "double") {
+                    compress_var<double>(reader, writer, readIO, writeIO, varName, 
+                                        decompDim, rank, size, isFirst, op);
+                    if (isFirst) totalVarsProcessed++;
+                } else if (type == "float") {
+                    compress_var<float>(reader, writer, readIO, writeIO, varName, 
+                                       decompDim, rank, size, isFirst, op);
+                    if (isFirst) totalVarsProcessed++;
+                } else {
+                    if (rank == 0) {
+                        std::cout << "    Skipping " << varName << " (unsupported type: " << type << ")\n";
+                    }
                 }
             }
 
@@ -153,10 +169,16 @@ int main(int argc, char** argv)
         reader.Close();
         writer.Close();
 
-        if (rank == 0) std::cout << "\nDone! Compressed " << step << " steps to " << outFile << "\n";
+        if (rank == 0) {
+            std::cout << "\n=== Done! ===\n";
+            std::cout << "Processed " << step << " steps\n";
+            std::cout << "Compressed " << totalVarsProcessed << " variables total\n";
+            std::cout << "Output: " << outFile << "\n";
+        }
 
     } catch (std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        std::cerr << "[Rank " << rank << "] Error: " << e.what() << "\n";
+        MPI_Abort(MPI_COMM_WORLD, 1);
         return 1;
     }
 
