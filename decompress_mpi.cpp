@@ -11,6 +11,7 @@
 
 namespace fs = std::filesystem;
 
+
 size_t getPathSize(const std::string& pathStr) {
     fs::path path(pathStr);
     if (!fs::exists(path)) return 0;
@@ -28,10 +29,10 @@ template<typename T>
 void analyze_and_write_step(
     adios2::Engine& readerOrig,
     adios2::Engine& readerComp,
-    adios2::Engine& writerDecomp, // 쓰기 엔진
+    adios2::Engine& writerDecomp,
     adios2::IO& ioOrig,
     adios2::IO& ioComp,
-    adios2::IO& ioWrite,          // 쓰기 IO
+    adios2::IO& ioWrite,
     const std::string& varName,
     size_t decompDim,
     int rank,
@@ -67,11 +68,10 @@ void analyze_and_write_step(
     if (!varOut) {
         varOut = ioWrite.DefineVariable<T>(varName, shape, start, count, adios2::ConstantDims);
     }
-    
+
     if (varOut) {
         writerDecomp.Put(varOut, dataComp.data(), adios2::Mode::Sync);
     }
-    // ---------------------------------------------------------
 
     double localSumSqErr = 0.0;
     double localSumSqOrig = 0.0;
@@ -83,7 +83,7 @@ void analyze_and_write_step(
         double o = static_cast<double>(dataOrig[i]);
         double c = static_cast<double>(dataComp[i]);
         double err = std::abs(o - c);
-        
+
         localSumSqErr += err * err;
         localSumSqOrig += o * o;
         localMaxErr = std::max(localMaxErr, err);
@@ -146,28 +146,32 @@ int main(int argc, char** argv) {
         std::cout << " Original:   " << origFile << "\n";
         std::cout << " Compressed: " << compFile << "\n";
         std::cout << " Output:     " << decompOutFile << "\n";
-        std::cout << " Compression Ratio: " << std::fixed << std::setprecision(2) << ratio << "x\n";
+        std::cout << " Compression Ratio with files: " << std::fixed << std::setprecision(2) << ratio << "x\n";
         std::cout << "========================================\n";
     }
 
     try {
         adios2::ADIOS adios(MPI_COMM_WORLD);
-        
+
         adios2::IO ioOrig = adios.DeclareIO("OrigReader");
         adios2::IO ioComp = adios.DeclareIO("CompReader");
-        
+
         adios2::IO ioWrite = adios.DeclareIO("DecompWriter");
         ioWrite.SetEngine("BP5");
 
         adios2::Engine rOrig = ioOrig.Open(origFile, adios2::Mode::Read);
         adios2::Engine rComp = ioComp.Open(compFile, adios2::Mode::Read);
-        
+
         adios2::Engine wDecomp = ioWrite.Open(decompOutFile, adios2::Mode::Write);
 
         int step = 0;
         while (rOrig.BeginStep() == adios2::StepStatus::OK) {
-            if (rComp.BeginStep() != adios2::StepStatus::OK) break;
+            // NOTE: For XGC data with 2 timesteps that never properly closes:
+            // Uncomment the following line to manually break after processing the desired number of steps
+            // if (step >= 2) break;
             
+            if (rComp.BeginStep() != adios2::StepStatus::OK) break;
+
             wDecomp.BeginStep();
 
             if (rank == 0) std::cout << "\n[Step " << step << " Analysis]\n";
@@ -175,21 +179,19 @@ int main(int argc, char** argv) {
             auto vars = ioOrig.AvailableVariables();
             for (const auto& name : targetVars) {
                 if (vars.find(name) == vars.end()) continue;
-                
+
                 std::string type = vars[name]["Type"];
-                
+
                 if (type == "double") analyze_and_write_step<double>(rOrig, rComp, wDecomp, ioOrig, ioComp, ioWrite, name, decompDim, rank, size);
                 else if (type == "float") analyze_and_write_step<float>(rOrig, rComp, wDecomp, ioOrig, ioComp, ioWrite, name, decompDim, rank, size);
-                // Will add different type handling
-                //else if (type == "int32_t") analyze_and_write_step<int>(rOrig, rComp, wDecomp, ioOrig, ioComp, ioWrite, name, decompDim, rank, size);
             }
 
             rOrig.EndStep();
             rComp.EndStep();
             wDecomp.EndStep();
-            
             step++;
         }
+        
         rOrig.Close();
         rComp.Close();
         wDecomp.Close();

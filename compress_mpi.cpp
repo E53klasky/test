@@ -50,7 +50,7 @@ void compress_var(
 
     reader.Get(varRead, data.data(), adios2::Mode::Sync);
 
-    // Define or inquire variable
+
     adios2::Variable<T> varWrite;
     if (isFirstDefinition) {
         varWrite = writeIO.DefineVariable<T>(varName, shape, start, count, adios2::ConstantDims);
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
         int totalVarsProcessed = 0;
         std::map<std::string, bool> varDefined;
 
-        // Process each "step" (which may contain different variables)
+
         while (reader.BeginStep() == adios2::StepStatus::OK) {
             if (rank == 0) std::cout << "\n=== Step " << step << " ===\n";
             
@@ -134,9 +134,9 @@ int main(int argc, char** argv)
 
             writer.BeginStep();
 
-            // Process ALL variables in this step that match our target list
+
             for (const auto& [varName, varInfo] : currentVars) {
-                // If user specified variables, only process those
+
                 if (!targetVars.empty() && 
                     std::find(targetVars.begin(), targetVars.end(), varName) == targetVars.end()) {
                     continue;
