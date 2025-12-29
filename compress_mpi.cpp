@@ -107,7 +107,7 @@ int main(int argc, char** argv)
 
         adios2::Params opParams;
         if (compressor == "CAESAR") {
-            opParams = {{"error_bound", std::to_string(errorBound)}, {"batch_size", "32"}};
+            opParams = {{"error_bound", std::to_string(errorBound)}, {"batch_size", "128"}};
         } else if (compressor == "MGARD" || compressor == "ZFP" || compressor == "SZ") {
             opParams = {{"accuracy", std::to_string(errorBound)}};
         }
