@@ -59,7 +59,17 @@ def main():
         sys.exit()
 
     args = parse_arguments()
-    datasets = ['TGV-Taylor-Green-vortex.65.65.65.bp5']
+    
+    # Datasets with their maximum timesteps
+    dataset_timesteps = {
+        'openpmd_000100.bp': 1,
+        'xgc.f0.bp.003.bp': 2,
+        'eels.bp': 1,
+        'cavity2D.4097.2049.1.0.000025.bp5': 20,
+        'Incompact3d.TGV.bp': 100,
+        'input_300steps.bp': 1,
+        'summit.20220527.bp': 1
+    }
     
     # Get parsed arguments
     readIO = args.readIO
@@ -74,22 +84,26 @@ def main():
     current_name = None
     
     try:
-        for dataset in datasets:
+        for dataset, max_steps in dataset_timesteps.items():
             current_dataset = dataset
-            print(f"On dataset {dataset}")
-            new_dataset = dataset.replace(".bp", "")
+            print(f"\n{'='*60}")
+            print(f"On dataset {dataset} (max {max_steps} steps)")
+            print(f"{'='*60}")
+            
+            new_dataset = dataset.replace(".bp5", "").replace(".bp", "")
             output = new_dataset + "OG.bp"
             
             r = ReaderClass.Reader(readIO, dataset, xml=xml, comm=comm)
             w = WrighterClass.Writer(wrightIO, output, xml=xml, comm=comm)
 
-            while True:
+            step_count = 0
+            while step_count < max_steps:
                 status = r.begin_step()
                 if status != adios2.bindings.StepStatus.OK:
                     break
 
                 current_step = r.current_step()
-                print(f"On step {current_step}")
+                print(f"On step {current_step} ({step_count + 1}/{max_steps})")
                 w.begin_step()
 
                 available_vars = r.Adios_reader.available_variables()
@@ -104,8 +118,6 @@ def main():
                         continue
                     
                     var_type = var_info.get('Type', '')
-                    
-                    print(f"Variable: {var_name}, Type: {var_type}")
                     
                     if var_type in ['double', 'float']:
                         print(f"Reading variable {var_name}")
@@ -123,10 +135,12 @@ def main():
 
                 r.end_step()
                 w.end_step()
+                step_count += 1
                 
             r.close()
             w.close()
-            print(f"Done with dataset {dataset} and finished writing {output}")
+            print(f"Done with dataset {dataset} - processed {step_count} steps")
+            print(f"Output: {output}")
 
     except Exception as e:
         print(f"Something went wrong on dataset {current_dataset}, step {current_step}, variable {current_name}, operator {op}")
