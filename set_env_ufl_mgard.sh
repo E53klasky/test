@@ -47,7 +47,7 @@ export MANPATH=$ADIOS2_DIR/share/man:$MANPATH
 # --------------------------
 # Step 3: MGARD
 # --------------------------
-export MGARD_DIR=/home/eklasky/Software/MGARD/install-serial
+export MGARD_DIR=/home/eklasky/Software/MGARD/build_scripts/install-cuda-turing
 export PATH=$MGARD_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$MGARD_DIR/lib64:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MGARD_DIR/lib64:$LIBRARY_PATH
@@ -57,11 +57,11 @@ export PKG_CONFIG_PATH=$MGARD_DIR/lib64/pkgconfig:$PKG_CONFIG_PATH
 # --------------------------
 # Step 4: nvCOMP
 # --------------------------
-export NVCOMP_DIR=$HOME/local/nvcomp-linux-x86_64-5.0.0.6_cuda12-archive
-export PATH=$NVCOMP_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$NVCOMP_DIR/lib:$LD_LIBRARY_PATH
-export CPATH=$NVCOMP_DIR/include:$CPATH
-export CMAKE_PREFIX_PATH=$NVCOMP_DIR:$CMAKE_PREFIX_PATH
+#export NVCOMP_DIR=$HOME/local/nvcomp-linux-x86_64-5.0.0.6_cuda12-archive
+#export PATH=$NVCOMP_DIR/bin:$PATH
+#export LD_LIBRARY_PATH=$NVCOMP_DIR/lib:$LD_LIBRARY_PATH
+#export CPATH=$NVCOMP_DIR/include:$CPATH
+#export CMAKE_PREFIX_PATH=$NVCOMP_DIR:$CMAKE_PREFIX_PATH
 
 # --------------------------
 # Step 5: libTorch / PyTorch
@@ -78,6 +78,10 @@ export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MPICH_DIR/lib:$LIBRARY_PATH
 export CPATH=$MPICH_DIR/include:$CPATH
 export PKG_CONFIG_PATH=$MPICH_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
+export PYTHONPATH=/lustre/blue/ranka/eklasky/ADIOS2/build/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
+
+
+
 
 echo "→ MPICH loaded from $MPICH_DIR"
 which mpicc
