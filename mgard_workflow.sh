@@ -1,26 +1,23 @@
 #!/bin/bash
 
-OPERATOR="MGARD"  
-
-echo "Step 1: Extracting doubles and floats from all datasets..."
-python copier.py --operator $OPERATOR
+OPERATOR="MGARD"
 
 echo ""
-echo "Step 2: Compressing all OG files with error bounds..."
+echo "Step 2: Compressing all OG directories with error bounds..."
 for file in *OG.bp; do
-    if [ -f "$file" ]; then
+    if [ -d "$file" ]; then
         echo "  Compressing $file..."
-        python compressor.py --operator $OPERATOR --input $file --quiet
+        python3 compressor.py --operator $OPERATOR --input "$file" --quiet
     fi
 done
 
 echo ""
-echo "Step 3: Validating all compressed files..."
+echo "Step 3: Validating all compressed directories..."
 for file in *OG.bp; do
-    if [ -f "$file" ]; then
-        basename=$(basename $file OG.bp)
+    if [ -d "$file" ]; then
+        basename=$(basename "$file" OG.bp)
         echo "  Validating $file..."
-        python validator.py --original $file --compressed $file --operator $OPERATOR --output ${basename}_validation.txt --quiet
+        python3 validator.py --original "$file" --compressed "$file" --operator $OPERATOR --output "${basename}_validation.txt" --quiet
     fi
 done
 
@@ -32,10 +29,11 @@ for vfile in *_validation.txt; do
     if [ -f "$vfile" ]; then
         echo ""
         echo "File: $vfile"
-        if grep -q " OVERALL: PASSED" $vfile; then
+        if grep -q " OVERALL: PASSED" "$vfile"; then
             echo "   PASSED"
         else
             echo "   FAILED"
         fi
     fi
 done
+
