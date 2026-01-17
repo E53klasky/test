@@ -47,7 +47,7 @@ export MANPATH=$ADIOS2_DIR/share/man:$MANPATH
 # --------------------------
 # Step 3: MGARD
 # --------------------------
-export MGARD_DIR=/home/eklasky/Software/MGARD/build_scripts/install-cuda-turing
+export MGARD_DIR=/home/eklasky/Software/MGARD/build_scripts/install-serial
 export PATH=$MGARD_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$MGARD_DIR/lib64:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MGARD_DIR/lib64:$LIBRARY_PATH
