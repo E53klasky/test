@@ -30,8 +30,14 @@ void convert_variable_to_bin(
     size_t totalSize = 1;
     for (auto s : shape) totalSize *= s;
 
+
+    std::vector<size_t> start(ndims, 0);
+    varRead.SetSelection({start, shape});
+
     std::vector<T> data(totalSize);
-    reader.Get(varRead, data.data(), adios2::Mode::Sync);
+    
+    reader.Get(varRead, data.data(), adios2::Mode::Deferred);
+    reader.PerformGets();
 
     std::vector<size_t> newShape;
     size_t dimsToAdd = 5 - ndims;
@@ -82,9 +88,9 @@ void convert_variable_to_bin(
 int main(int argc, char** argv)
 {
     if (argc < 4) {
-        std::cout << "Usage: ./bin_mpi <input.bp> <variable_name> <output.bin>\n";
+        std::cout << "Usage: ./bin <input.bp> <variable_name> <output.bin>\n";
         std::cout << "\nExample:\n";
-        std::cout << "  ./bin_mpi data.bp temperature output.bin.f32\n";
+        std::cout << "  ./bin data.bp temperature output.bin.f32\n";
         std::cout << "\nDescription:\n";
         std::cout << "  Reads a variable from ADIOS2 BP file and writes it as flat binary.\n";
         std::cout << "  Automatically reshapes to 5D by prepending 1s:\n";
@@ -111,7 +117,6 @@ int main(int argc, char** argv)
         bool variableFound = false;
         int step = 0;
 
-       
         while (reader.BeginStep() == adios2::StepStatus::OK) {
             auto availableVars = readIO.AvailableVariables();
 
@@ -142,7 +147,7 @@ int main(int argc, char** argv)
 
                 variableFound = true;
                 reader.EndStep();
-                break;  
+                break;
             }
 
             reader.EndStep();
