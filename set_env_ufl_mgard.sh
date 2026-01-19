@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================================
-# UF HiPerGator ADIOS2 + CAESAR + CUDA + nvCOMP + Torch environment
+# UF HiPerGator ADIOS2 + CAESAR + CUDA + MGARD + nvCOMP + Torch environment
 # =====================================================================
 
 # --------------------------
@@ -8,8 +8,8 @@
 # --------------------------
 clean_path() {
     echo "$1" | tr ':' '\n' | \
-        grep -v -E 'ADIOS|adios|CAESAR|caesar|MGARD|mgard|nvcomp|cuda|CUDA|Torch|torch|mpich|mpi' | \
-        paste -sd:
+    grep -v -E 'ADIOS|adios|CAESAR|caesar|MGARD|mgard|nvcomp|cuda|CUDA|Torch|torch|mpich|mpi' | \
+    paste -sd:
 }
 
 export PATH=$(clean_path "$PATH")
@@ -20,7 +20,7 @@ export PKG_CONFIG_PATH=$(clean_path "$PKG_CONFIG_PATH")
 export MANPATH=$(clean_path "$MANPATH")
 
 # --------------------------
-# Step 1: Load CUDA module
+# Step 1: Load CUDA
 # --------------------------
 module load cuda/12.8.1
 export CUDA_HOME=/apps/compilers/cuda/12.8.1
@@ -45,56 +45,52 @@ export PKG_CONFIG_PATH=$ADIOS2_DIR/lib64/pkgconfig:$CAESAR_DIR/lib/pkgconfig:$PK
 export MANPATH=$ADIOS2_DIR/share/man:$MANPATH
 
 # --------------------------
-# Step 3: MGARD
+# Step 3: MGARD + nvCOMP
 # --------------------------
 export MGARD_DIR=/home/eklasky/Software/MGARD/build_scripts/install-cuda-turing
+
+# Make sure both lib and lib64 are in the library path
 export PATH=$MGARD_DIR/bin:$PATH
-export LD_LIBRARY_PATH=$MGARD_DIR/lib64:$LD_LIBRARY_PATH
-export LIBRARY_PATH=$MGARD_DIR/lib64:$LIBRARY_PATH
+export LD_LIBRARY_PATH=$MGARD_DIR/lib:$MGARD_DIR/lib64:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$MGARD_DIR/lib:$MGARD_DIR/lib64:$LIBRARY_PATH
 export CPATH=$MGARD_DIR/include:$CPATH
 export PKG_CONFIG_PATH=$MGARD_DIR/lib64/pkgconfig:$PKG_CONFIG_PATH
 
-# --------------------------
-# Step 4: nvCOMP
-# --------------------------
-#export NVCOMP_DIR=$HOME/local/nvcomp-linux-x86_64-5.0.0.6_cuda12-archive
-#export PATH=$NVCOMP_DIR/bin:$PATH
-#export LD_LIBRARY_PATH=$NVCOMP_DIR/lib:$LD_LIBRARY_PATH
-#export CPATH=$NVCOMP_DIR/include:$CPATH
-#export CMAKE_PREFIX_PATH=$NVCOMP_DIR:$CMAKE_PREFIX_PATH
+# Set NVCOMP_DIR to MGARD_DIR since libnvcomp.so lives there
+export NVCOMP_DIR=$MGARD_DIR
+export LD_LIBRARY_PATH=$NVCOMP_DIR/lib:$LD_LIBRARY_PATH
 
 # --------------------------
-# Step 5: libTorch / PyTorch
+# Step 4: libTorch / PyTorch
 # --------------------------
 export Torch_DIR=/lustre/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/share/cmake/Torch
 export CMAKE_PREFIX_PATH=$Torch_DIR:$CMAKE_PREFIX_PATH
 export LD_LIBRARY_PATH=/lustre/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
 
 # --------------------------
+# Step 5: MPICH
+# --------------------------
 export MPICH_DIR=$HOME/local/mpich-4.3.1
-
 export PATH=$MPICH_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MPICH_DIR/lib:$LIBRARY_PATH
 export CPATH=$MPICH_DIR/include:$CPATH
 export PKG_CONFIG_PATH=$MPICH_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
+
+# --------------------------
+# Step 6: Python
+# --------------------------
 export PYTHONPATH=/lustre/blue/ranka/eklasky/ADIOS2/build/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
-
-
-
-
-echo "→ MPICH loaded from $MPICH_DIR"
-which mpicc
-which mpirun
+export LD_LIBRARY_PATH=/home/eklasky/Software/MGARD/install-cuda-turing/lib:/home/eklasky/Software/MGARD/install-cuda-turing/lib64:$LD_LIBRARY_PATH
 
 export UCX_TLS=tcp
 export UCX_NET_DEVICES=lo
 
 # --------------------------
-# Step 6: Summary
+# Step 7: Summary
 # --------------------------
 echo "============================================================"
-echo "Environment set CLEANLY for ADIOS2 + CAESAR + CUDA + nvCOMP + Torch"
+echo "Environment set CLEANLY for ADIOS2 + CAESAR + CUDA + MGARD + nvCOMP + Torch"
 echo "------------------------------------------------------------"
 echo "ADIOS2_DIR       = $ADIOS2_DIR"
 echo "CAESAR_DIR       = $CAESAR_DIR"

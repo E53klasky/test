@@ -53,6 +53,8 @@ export LD_LIBRARY_PATH=$MGARD_DIR/lib64:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MGARD_DIR/lib64:$LIBRARY_PATH
 export CPATH=$MGARD_DIR/include:$CPATH
 export PKG_CONFIG_PATH=$MGARD_DIR/lib64/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=/home/eklasky/Software/MGARD/build_scripts/install-serial/lib64:$LD_LIBRARY_PATH
+
 
 # --------------------------
 # Step 4: nvCOMP
@@ -81,7 +83,7 @@ export PKG_CONFIG_PATH=$MPICH_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
 export PYTHONPATH=/lustre/blue/ranka/eklasky/ADIOS2/build/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
 
 
-
+export LD_LIBRARY_PATH=/home/eklasky/Software/MGARD/install-serial/lib64:$LD_LIBRARY_PATH
 
 echo "→ MPICH loaded from $MPICH_DIR"
 which mpicc
