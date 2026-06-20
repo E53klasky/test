@@ -34,8 +34,8 @@ which nvcc
 # --------------------------
 # Step 2: ADIOS2 and CAESAR
 # --------------------------
-export ADIOS2_DIR=/lustre/blue/ranka/eklasky/ADIOS2/install
-export CAESAR_DIR=/lustre/blue/ranka/eklasky/CAESAR_C/install
+export ADIOS2_DIR=/lustre/blue2/ranka/eklasky/ADIOS2/install
+export CAESAR_DIR=/lustre/blue2/ranka/eklasky/CAESAR_C/install
 
 export PATH=$ADIOS2_DIR/bin:$CAESAR_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$ADIOS2_DIR/lib64:$CAESAR_DIR/lib:$LD_LIBRARY_PATH
@@ -63,9 +63,9 @@ export LD_LIBRARY_PATH=$NVCOMP_DIR/lib:$LD_LIBRARY_PATH
 # --------------------------
 # Step 4: libTorch / PyTorch
 # --------------------------
-export Torch_DIR=/lustre/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/share/cmake/Torch
+export Torch_DIR=/lustre/blue2/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/share/cmake/Torch
 export CMAKE_PREFIX_PATH=$Torch_DIR:$CMAKE_PREFIX_PATH
-export LD_LIBRARY_PATH=/lustre/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/lustre/blue2/ranka/eklasky/caesar_venv/lib/python3.11/site-packages/torch/lib:$LD_LIBRARY_PATH
 
 # --------------------------
 # Step 5: MPICH
@@ -80,7 +80,7 @@ export PKG_CONFIG_PATH=$MPICH_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
 # --------------------------
 # Step 6: Python
 # --------------------------
-export PYTHONPATH=/lustre/blue/ranka/eklasky/ADIOS2/build/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
+export PYTHONPATH=/lustre/blue2/ranka/eklasky/ADIOS2/build/blue2/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/home/eklasky/Software/MGARD/install-cuda-turing/lib:/home/eklasky/Software/MGARD/install-cuda-turing/lib64:$LD_LIBRARY_PATH
 
 export UCX_TLS=tcp
