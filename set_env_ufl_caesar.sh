@@ -80,8 +80,7 @@ export LD_LIBRARY_PATH=$MPICH_DIR/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$MPICH_DIR/lib:$LIBRARY_PATH
 export CPATH=$MPICH_DIR/include:$CPATH
 export PKG_CONFIG_PATH=$MPICH_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
-export PYTHONPATH=/lustre/blue2/ranka/eklasky/ADIOS2/build/blue2/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
-
+export PYTHONPATH=/lustre/blue2/ranka/eklasky/ADIOS2/build/blue/ranka/eklasky/caesar_venv/lib/python3.11/site-packages:$PYTHONPATH
 
 export LD_LIBRARY_PATH=/home/eklasky/Software/MGARD/install-serial/lib64:$LD_LIBRARY_PATH
 
